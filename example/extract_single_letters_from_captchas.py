@@ -7,7 +7,7 @@ import imutils
 
 CAPTCHA_IMAGE_FOLDER = "generated_captcha_images"
 OUTPUT_FOLDER = "extracted_letter_images"
-
+split_images = []
 
 # Get a list of all the captcha images we need to process
 captcha_image_files = glob.glob(os.path.join(CAPTCHA_IMAGE_FOLDER, "*"))
@@ -75,6 +75,7 @@ for (i, captcha_image_file) in enumerate(captcha_image_files):
 
         # Extract the letter from the original image with a 2-pixel margin around the edge
         letter_image = gray[y - 2:y + h + 2, x - 2:x + w + 2]
+        split_images.add(letter_image)
 
         # Get the folder to save the image in
         save_path = os.path.join(OUTPUT_FOLDER, letter_text)

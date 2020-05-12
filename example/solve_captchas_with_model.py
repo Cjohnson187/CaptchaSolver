@@ -77,7 +77,7 @@ for image_file in captcha_image_files:
     output = cv2.merge([image] * 3)
     predictions = []
 
-    # loop over the lektters
+    # loop over the letters
     for letter_bounding_box in letter_image_regions:
         # Grab the coordinates of the letter in the image
         x, y, w, h = letter_bounding_box
