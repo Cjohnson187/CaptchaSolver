@@ -36,7 +36,7 @@ OUTPUT_FOLDER = "extracted_letter_images" # captcha images split by each glob(po
 
 
 neighbors = 2
-model = KNeighborsClassifier(n_neighbors=neighbors, p=1)
+knn = KNeighborsClassifier(n_neighbors=neighbors, p=1)
 
 
 def load(imagePath_list, verbose=-1):
@@ -46,9 +46,15 @@ def load(imagePath_list, verbose=-1):
 
     for (i, imagePath) in enumerate(imagePath_list):
         image = cv2.imread(imagePath)
+        print(" shape / type- ", image.shape, " / ", type(image))
+
+        #cv2.imshow("Guess- ", image)
+        #cv2.waitKey()
+
+
 
         label = imagePath.split(os.path.sep)[-2]
-        print("1 train data shape / type- ", image.shape, " / ", type(image))
+        #print("1 train data shape / type- ", image.shape, " / ", type(image))
 
         image = cv2.resize(image, (32, 32), interpolation=cv2.INTER_CUBIC)
         print("train data shape / type- ", image.shape, " / ", type(image), "______ training images after resize cv2")
@@ -60,36 +66,46 @@ def load(imagePath_list, verbose=-1):
         if verbose > 0 and i > 0 and (i + 1) % verbose == 0:
             print("[INFO] processed {}/{}".format(i + 1,
                                                   len(imagePath_list)))
-   #print(image)
+    #print(image)
 
     return (np.array(data), np.array(labels))
 
 
 def train(model):
-    (data, labels) = load(imagePath_list, verbose=500)
-    data = data.reshape((data.shape[0], 3072))
 
-    #  split data 70% training, 10% validation, 20% testing
+    (data, labels) = load(imagePath_list, verbose=500)
+    print("actual train data shape / type- ", labels, " / ", type(data), " _______ before resize ", data.shape[0])
+
+    data = data.reshape((data.shape[0], 3072))
+    print("actual train data shape / type- ", data.shape, " / ", type(data), " _______ after resize  ", data.shape[0])
+    #cv2.imshow("Guess- ", data)
+    #cv2.waitKey()
+
+    #print("label---- ", label)
+#  split data 70% training, 10% validation, 20% testing
     (trainX, testX, trainY, testY) = train_test_split(data, labels, test_size=0.2, random_state=42)
     (trainX, validateX, trainY, validateY) = train_test_split(trainX, trainY, test_size=0.1, random_state=42)
 
-    # encode labels as integers
-    le = LabelEncoder()
-    labels = le.fit_transform(labels)
 
-    # 4) Train the classifier
+    # encode labels as integers
+    #le = LabelEncoder()
+    #labels = le.fit_transform(labels)
+    print("label---- ", labels, len(labels))
+
+# 4) Train the classifier
 
     #neighbors = 7
     # p(1)= Manhattan distance     P(2)= Euclidean distance(default)
     #model = KNeighborsClassifier(n_neighbors=neighbors, p=1)
-    print("train data shape / type- ", trainX.shape, " / ", type(trainX), " _______ after formatiing for training")
+    #cv2.imshow("Guess- ", trainX)
+    #cv2.waitKey()
+
+    print("train data shape---------- / type- ", trainX.shape, " / ", type(trainX), " _______ after formating for training")
     model.fit(trainX, trainY)
     model.fit(validateX, validateY)
-    print(classification_report(testY, model.predict(testX), target_names=le.classes_))
+    #print(classification_report(testY, model.predict(testX), target_names=le.classes_))
 
     return model
-
-
 """
 ***************************************************************************************/
 *    Title: How to break a CAPTCHA system in 15 minutes with Machine Learning 
@@ -148,8 +164,10 @@ def split_captcha(captcha_image_files):
         print("train data shape / type- ", image.shape, " / ", type(image), "____ loaded sample to predict ")
 
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        print("train data shape / type- ", gray.shape, " / ", type(gray), "____ loaded sample to predict, after bgr2gray ")
 
-        # Add some extra padding around the image
+
+    # Add some extra padding around the image
         gray = cv2.copyMakeBorder(gray, 8, 8, 8, 8, cv2.BORDER_REPLICATE)
 
         # threshold the image (convert it to pure black and white)
@@ -198,7 +216,10 @@ def split_captcha(captcha_image_files):
 
             # Extract the letter from the original image with a 2-pixel margin around the edge
             letter_image = gray[y - 2:y + h + 2, x - 2:x + w + 2]
+            print("train data shape [1]/ type- ", letter_image.shape, " / ", type(letter_image), " _______ while splitting up captcha")
+
             split_images.append(letter_image)
+
 
             # Get the folder to save the image in
             #save_path = os.path.join(OUTPUT_FOLDER, letter_text)
@@ -220,12 +241,12 @@ def split_captcha(captcha_image_files):
 
 
 if __name__ == "__main__":
-    model = train(model)
+    model = train(knn)
     # directory that contains extracted captcha to analyze
     captcha_image_files = glob.glob(os.path.join(CAPTCHA_IMAGE_FOLDER, "*"))
     split_images = split_captcha(captcha_image_files)
-    model = train(model)
-    print(len(split_images))
+    #model = train(model)
+    #print(len(split_images))
     prediction = ""
     word = ""
     print("train data shape [1]/ type- ", split_images[1].shape, " / ", type(split_images[1]), " _______ letter bounding box")
@@ -233,16 +254,38 @@ if __name__ == "__main__":
 
 
     for items in split_images:
-        image = cv2.resize(items, (32, 32), interpolation=cv2.INTER_CUBIC)
-        print("train data shape / type- ", image.shape, " / ", type(image), " ______ after cv2 resize to use the model")
+        #i = resize_to_fit(items, 1533, 3072)
+        i = cv2.copyMakeBorder(items, 10, 10, 10, 10, cv2.BORDER_REPLICATE)
+        #items = resize_to_fit(items, 20, 20)
+        print(i.shape[0],"  color image / type- ", i.shape, " / ", type(i), " ______ converting back to color with reshape")
+        i = np.array(cv2.resize(i, (32, 32), interpolation=cv2.INTER_CUBIC))
+        i = cv2.cvtColor(i, cv2.COLOR_GRAY2RGB)
+        print(i.shape,"  color image / type- ", i.shape, " / ", type(i), " ______ ")
+        #i = cv2.cvtColor(i, cv2.COLOR_GRAY2RGB)
 
 
-    #image = image.reshape((image.shape[0], 3072))
+        #cv2.imshow("Guess- ", i)
+        #cv2.waitKey()
 
-    #item = items.reshape((data.shape[0], 3072))
+        i = i.reshape((1, 3072))
 
-    #item = resize_to_fit(items, 20, 20)
-        print("predicted- ", model.predict(image))
+
+        #print(clr_image.shape[0],"  color image / type- ", clr_image.shape, " / ", type(clr_image), " ______ converting back to color with reshape")
+        #clr_image = clr_image.reshape((1533, 3072))
+
+        #print("train data shape / type- ", clr_image.shape, " / ", type(clr_image), " ______ converting back to color with reshape")
+
+
+        #image = cv2.resize(items, (32, 32), interpolation=cv2.INTER_CUBIC)
+        print("train data shape / type- ", i.shape, " / ", type(i), " ______ after cv2 resize to use the model")
+
+
+        #image = image.reshape((image.shape[0], 3072))
+
+        #item = items.reshape((data.shape[0], 3072))
+
+        #item = resize_to_fit(items, 20, 20)
+        print("predicted- ", model.predict(i))
         #prediction += model.predict(image)
         #cv2.imshow("Guess- ", output)
         #cv2.waitKey()
