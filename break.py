@@ -24,10 +24,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 
 
-imagePath_list = list(paths.list_images("/classes/letters"))  # training data
-MODEL_LABELS_FILENAME = "model_labels.dat"  # model labels for training
-CAPTCHA_IMAGE_FOLDER = "generated_captcha_images"  # image to predict with trained model
-OUTPUT_FOLDER = "extracted_letter_images"  # captcha images split by each glob(potential letter)
+training_image_path_list = list(paths.list_images("data/classes/letters"))  # training data
+#  "model_labels.dat"  # model labels for training
+CAPTCHA_IMAGE_FOLDER = "data/generated_captcha_images"  # image to predict with trained model
+# OUTPUT_FOLDER = "data/extracted_letter_images"  # captcha images split by each glob(potential letter)
 
 
 neighbors = 5
@@ -57,7 +57,7 @@ def load(image_path_list, verbose=-1):
 
 def train(model):
     # load training images
-    (data, labels) = load(imagePath_list, verbose=500)
+    (data, labels) = load(training_image_path_list, verbose=500)
     data = data.reshape((data.shape[0], 3072))
 
     # split data 70% training, 10% validation, 20% testing
@@ -108,6 +108,7 @@ def resize_to_fit(image, width, height):
 
 
 def split_captcha(captcha_image_files):
+    split_image_list = []
     counts = {}
 
     # loop over the image paths
@@ -169,7 +170,7 @@ def split_captcha(captcha_image_files):
             # Extract the letter from the original image with a 2-pixel margin around the edge
             letter_image = gray[y - 2:y + h + 2, x - 2:x + w + 2]
 
-            split_images.append(letter_image)
+            split_image_list.append(letter_image)
 
             # write the letter image to a file
             count = counts.get(letter_text, 1)
@@ -177,7 +178,7 @@ def split_captcha(captcha_image_files):
             # increment the count for the current key
             counts[letter_text] = count + 1
 
-    return split_images
+    return split_image_list
 
 
 if __name__ == "__main__":
@@ -186,10 +187,10 @@ if __name__ == "__main__":
     model_knn = train(knn)
 
     # directory that contains extracted captcha to analyze
-    captcha_files = glob.glob(os.path.join(CAPTCHA_IMAGE_FOLDER, "*"))
-
+    captcha_file = glob.glob(os.path.join(CAPTCHA_IMAGE_FOLDER, "*"))
+    print(type(captcha_file), "  ", len(captcha_file))
     # calling method to split up each character in the target image
-    split_images = split_captcha(captcha_files)
+    split_images = split_captcha(captcha_file)
 
     # string to print with each prediction
     prediction = ""
@@ -208,17 +209,23 @@ if __name__ == "__main__":
 
         # make prediction
         guess = model_knn.predict(current_image)
+        print(str(guess))
 
         # add each predicted character to the string being built
-        prediction += guess
+        prediction += str(guess)
 
 
 
     print(prediction)
 
-    # TODO I wanted to print the prediction with imshow
-    #cv2.imshow("Guess- ", output)
-    #cv2.waitKey()
+    image_for_imread = cv2.imread(captcha_file[0])
+    # making image bigger so the window shows the predicted text in the title
+    image_for_imread = cv2.copyMakeBorder(image_for_imread, 10, 10, 10, 10, cv2.BORDER_REPLICATE)
+    image_for_imread = np.array(cv2.resize(image_for_imread, (256, 128), interpolation=cv2.INTER_CUBIC))
+
+    # show prediction as image heading with image
+    cv2.imshow(prediction, image_for_imread)
+    cv2.waitKey()
 
 
 
