@@ -1,3 +1,4 @@
 /.idea/
-/data/
+/data/classes/*
+/data/generated_captcha_images/*
 /venv/
