@@ -24,7 +24,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 
 
-imagePath_list = list(paths.list_images("captcha_classes_for_captcha_solver/"))  # training data
+imagePath_list = list(paths.list_images("captcha_classes_for_captcha_solver-master/"))  # training data
 MODEL_LABELS_FILENAME = "model_labels.dat"  # model labels for training
 CAPTCHA_IMAGE_FOLDER = "generated_captcha_images"  # image to predict with trained model
 OUTPUT_FOLDER = "extracted_letter_images"  # captcha images split by each glob(potential letter)

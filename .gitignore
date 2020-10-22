@@ -1,8 +1,11 @@
 /.idea/
 /example/
 /classes/
-/data/
+data/*
 /data2/
 /samples/
 /venv/
-/env/
+env/
+.vscode/*
+captcha_classes_for_captcha_solver-master/*
+data/captcha samples/*
