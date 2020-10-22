@@ -30,7 +30,7 @@ CAPTCHA_IMAGE_FOLDER = "generated_captcha_images"  # image to predict with train
 OUTPUT_FOLDER = "extracted_letter_images"  # captcha images split by each glob(potential letter)
 
 
-neighbors = 5
+neighbors = 1
 knn = KNeighborsClassifier(n_neighbors=neighbors, p=1)
 
 
@@ -188,12 +188,18 @@ if __name__ == "__main__":
 
     # directory that contains extracted captcha to analyze
     captcha_files = glob.glob(os.path.join(CAPTCHA_IMAGE_FOLDER, "*"))
+    print ("captcha array type = ", type(captcha_files[0]))
+
+    # saving image to print at the end
+    image = cv2.imread(captcha_files[0])
 
     # calling method to split up each character in the target image
     split_images = split_captcha(captcha_files)
 
     # string to print with each prediction
     prediction = ""
+
+
 
     for items in split_images:
 
@@ -215,16 +221,9 @@ if __name__ == "__main__":
         prediction += str(guess)
 
 
-
-    print("Charcters found in captcha - ", prediction)
-
-    # TODO I wanted to print the prediction with imshow
-    cv2.imshow("Target image- ", current_image)
+    # showing results
+    print("Characters found in captcha - ", prediction)
+    
+    # showing original image
+    cv2.imshow("Target image- ", image)
     cv2.waitKey()
-
-
-
-
-
-
-
