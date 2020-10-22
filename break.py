@@ -24,7 +24,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 
 
-imagePath_list = list(paths.list_images("/classes/letters"))  # training data
+imagePath_list = list(paths.list_images("captcha_classes_for_captcha_solver/"))  # training data
 MODEL_LABELS_FILENAME = "model_labels.dat"  # model labels for training
 CAPTCHA_IMAGE_FOLDER = "generated_captcha_images"  # image to predict with trained model
 OUTPUT_FOLDER = "extracted_letter_images"  # captcha images split by each glob(potential letter)
@@ -109,6 +109,7 @@ def resize_to_fit(image, width, height):
 
 def split_captcha(captcha_image_files):
     counts = {}
+    split_images = []
 
     # loop over the image paths
     for (i, captcha_image_file) in enumerate(captcha_image_files):
@@ -131,7 +132,7 @@ def split_captcha(captcha_image_files):
         contours = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # Hack for compatibility with different OpenCV versions
-        contours = contours[0] if imutils.is_cv2() else contours[1]
+        contours = contours[1] if imutils.is_cv3() else contours[0]
 
         letter_image_regions = []
         # Now we can loop through each of the four contours and extract the letter inside of each one
@@ -204,21 +205,22 @@ if __name__ == "__main__":
         current_image = cv2.cvtColor(current_image, cv2.COLOR_GRAY2RGB)
 
         # reshape to test data size
-        current_image = current_image.reshape((1, 3072))
+        current_image_shaped = current_image.reshape((1, 3072))
 
         # make prediction
-        guess = model_knn.predict(current_image)
+        guess = model_knn.predict(current_image_shaped)
+        print("guess - ", guess, " , ",type(guess))
 
         # add each predicted character to the string being built
-        prediction += guess
+        prediction += str(guess)
 
 
 
-    print(prediction)
+    print("Charcters found in captcha - ", prediction)
 
     # TODO I wanted to print the prediction with imshow
-    #cv2.imshow("Guess- ", output)
-    #cv2.waitKey()
+    cv2.imshow("Target image- ", current_image)
+    cv2.waitKey()
 
 
 
